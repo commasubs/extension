@@ -1,0 +1,31 @@
+{
+  "name": "commasubs",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "homepage": "https://www.commasubs.com",
+  "scripts": {
+    "build": "node ./build.mjs"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "20.18.1",
+      "onFail": "warn"
+    },
+    "packageManager": {
+      "name": "npm",
+      "version": "10.8.2",
+      "onFail": "warn"
+    }
+  },
+  "private": true,
+  "devDependencies": {
+    "@types/webextension-polyfill": "^0.12.1",
+    "esbuild": "^0.24.0",
+    "lru_map": "^0.4.1",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.6.3",
+    "@tailwindcss/forms": "^0.5.9",
+    "js-base64": "^3.7.7"
+  }
+}

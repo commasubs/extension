@@ -1,0 +1,56 @@
+{
+  "name": "Comma Subs",
+  "version": "0.0.0.0",
+  "manifest_version": 3,
+  "description": "Watch videos with community made subtitles.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "24": "icons/icon-24.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "64": "icons/icon-64.png",
+    "96": "icons/icon-96.png",
+    "128": "icons/icon-128.png",
+    "256": "icons/icon-256.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "24": "icons/icon-24.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "64": "icons/icon-64.png"
+    },
+    "default_popup": "content/popup.html"
+  },
+  "options_ui": {
+    "page": "content/options.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "content/scripts/background.js",
+    "scripts": ["content/scripts/background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://weverse.io/*"],
+      "js": ["content/scripts/weverse.js"]
+    },
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["content/scripts/youtube.js"]
+    }
+  ],
+  "permissions": ["storage"],
+  "homepage_url": "https://www.commasubs.com",
+  "minimum_chrome_version": "88",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "commasubs@example.com",
+      "strict_min_version": "109.0"
+    },
+    "safari": {
+      "strict_min_version": "15.4"
+    }
+  }
+}

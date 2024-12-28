@@ -1,0 +1,150 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version: '20.18.1'
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+      - name: Install
+        run: npm install
+      - name: Build
+        run: |
+          npm run build
+          npx tailwindcss -i ./internal/options.css -o ./content/options.css
+          npx tailwindcss -i ./internal/popup.css -o ./content/popup.css
+      - name: Upload content
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: content
+          path: content/
+          retention-days: 1
+          if-no-files-found: error
+
+  chrome:
+    runs-on: ubuntu-24.04
+    needs: [build]
+    env:
+      Archive: "${{ github.job }}-${{ github.ref_name }}.zip"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+      - name: Download content
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: content
+          path: content
+      - name: Create archive
+        run: bash tools/build-$GITHUB_JOB.sh
+      - name: Upload archive
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: ${{ env.Archive }}
+          path: ${{ env.Archive }}
+
+  edge:
+    runs-on: ubuntu-24.04
+    needs: [build]
+    env:
+      Archive: "${{ github.job }}-${{ github.ref_name }}.zip"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+      - name: Download content
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: content
+          path: content
+      - name: Create archive
+        run: bash tools/build-$GITHUB_JOB.sh
+      - name: Upload archive
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: ${{ env.Archive }}
+          path: ${{ env.Archive }}
+
+  firefox:
+    runs-on: ubuntu-24.04
+    needs: [build]
+    env:
+      Archive: "${{ github.job }}-${{ github.ref_name }}.zip"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+      - name: Download content
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: content
+          path: content
+      - name: Create archive
+        run: bash tools/build-$GITHUB_JOB.sh
+      - name: Upload archive
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: ${{ env.Archive }}
+          path: ${{ env.Archive }}
+
+  opera:
+    runs-on: ubuntu-24.04
+    needs: [build]
+    env:
+      Archive: "${{ github.job }}-${{ github.ref_name }}.zip"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+      - name: Download content
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: content
+          path: content
+      - name: Create archive
+        run: bash tools/build-$GITHUB_JOB.sh
+      - name: Upload archive
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: ${{ env.Archive }}
+          path: ${{ env.Archive }}
+
+  safari:
+    runs-on: ubuntu-24.04
+    needs: [build]
+    env:
+      Archive: "${{ github.job }}-${{ github.ref_name }}.zip"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+      - name: Download content
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: content
+          path: content
+      - name: Create archive
+        run: bash tools/build-$GITHUB_JOB.sh
+      - name: Upload archive
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: ${{ env.Archive }}
+          path: ${{ env.Archive }}
+
+  release:
+    runs-on: ubuntu-24.04
+    needs: [chrome, edge, firefox, opera, safari]
+    steps:
+      - name: Download archives
+        uses: actions/download-artifact@v4.1.8
+        with:
+          merge-multiple: true
+      - name: Display structure of downloaded files
+        run: ls -R
+      - name: Push to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "*.zip"

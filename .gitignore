@@ -1,0 +1,7 @@
+.idea
+node_modules
+manifest.json
+*.zip
+/content/scripts/
+/content/options.css
+/content/popup.css

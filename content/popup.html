@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="popup.css" rel="stylesheet">
+</head>
+<body class="w-80 min-h-96 bg-comma-600">
+<div class="bg-comma-900 p-2 fixed top-0 right-0 left-0 z-10 flex text-white items-center">
+    <button type="button" id="btn-off" title="Turn off subtitles" class="rounded-sm p-1 shadow-sm hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+        <svg viewBox="0 0 20 20" fill="currentColor" class="size-5">
+            <path fill-rule="evenodd" d="M3.28 2.22a.75.75 0 0 0-1.06 1.06l14.5 14.5a.75.75 0 1 0 1.06-1.06l-1.745-1.745a10.029 10.029 0 0 0 3.3-4.38 1.651 1.651 0 0 0 0-1.185A10.004 10.004 0 0 0 9.999 3a9.956 9.956 0 0 0-4.744 1.194L3.28 2.22ZM7.752 6.69l1.092 1.092a2.5 2.5 0 0 1 3.374 3.373l1.091 1.092a4 4 0 0 0-5.557-5.557Z" clip-rule="evenodd" />
+            <path d="m10.748 13.93 2.523 2.523a9.987 9.987 0 0 1-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 0 1 0-1.186A10.007 10.007 0 0 1 2.839 6.02L6.07 9.252a4 4 0 0 0 4.678 4.678Z" />
+        </svg>
+    </button>
+    <p class="grow font-sans text-base text-center">Comma Subs</p>
+    <button type="button" id="btn-settings" title="Settings" class="rounded-sm p-1 shadow-sm hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+        <svg viewBox="0 0 20 20" fill="currentColor" class="size-5">
+            <path fill-rule="evenodd" d="M7.84 1.804A1 1 0 0 1 8.82 1h2.36a1 1 0 0 1 .98.804l.331 1.652a6.993 6.993 0 0 1 1.929 1.115l1.598-.54a1 1 0 0 1 1.186.447l1.18 2.044a1 1 0 0 1-.205 1.251l-1.267 1.113a7.047 7.047 0 0 1 0 2.228l1.267 1.113a1 1 0 0 1 .206 1.25l-1.18 2.045a1 1 0 0 1-1.187.447l-1.598-.54a6.993 6.993 0 0 1-1.929 1.115l-.33 1.652a1 1 0 0 1-.98.804H8.82a1 1 0 0 1-.98-.804l-.331-1.652a6.993 6.993 0 0 1-1.929-1.115l-1.598.54a1 1 0 0 1-1.186-.447l-1.18-2.044a1 1 0 0 1 .205-1.251l1.267-1.114a7.05 7.05 0 0 1 0-2.227L1.821 7.773a1 1 0 0 1-.206-1.25l1.18-2.045a1 1 0 0 1 1.187-.447l1.598.54A6.992 6.992 0 0 1 7.51 3.456l.33-1.652ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" />
+        </svg>
+    </button>
+</div>
+<div class="p-2 mt-12 grid gap-8">
+    <div>
+        <div class="relative">
+            <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                <div class="w-full border-t border-white/10"></div>
+            </div>
+            <div class="relative flex justify-center">
+                <span class="bg-comma-600 px-2 text-sm text-comma-300">human made</span>
+            </div>
+        </div>
+        <ul id="human-list" class="mt-2 space-y-2 notfound"></ul>
+    </div>
+    <div>
+        <div class="relative">
+            <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                <div class="w-full border-t border-white/10"></div>
+            </div>
+            <div class="relative flex justify-center">
+                <span class="bg-comma-600 px-2 text-sm text-comma-300">machine generated</span>
+            </div>
+        </div>
+        <ul id="machine-list" class="mt-2 space-y-2 notfound"></ul>
+    </div>
+</div>
+
+<div id="loader" class="absolute top-12 left-0 right-0 bottom-0 flex items-center justify-center backdrop-blur">
+    <div class="loader"></div>
+</div>
+
+<template id="listrow">
+    <li class="flex p-2 bg-comma-900 hover:bg-comma-700 rounded-md cursor-pointer">
+        <div class="min-w-full space-y-2 text-gray-200">
+            <div class="flex justify-between gap-x-3">
+                <p data-id="name" class="text-xs truncate"></p>
+                <p data-id="updated" class="grow text-right text-xs whitespace-nowrap"></p>
+            </div>
+            <div class="flex justify-between gap-x-3">
+                <p data-id="code" class="w-fit px-1 py-0 whitespace-nowrap border border-gray-500 rounded-sm flex items-center text-xs"></p>
+                <p data-id="team" class="text-xs leading-[unset] text-right truncate"></p>
+            </div>
+        </div>
+    </li>
+</template>
+
+<script src="scripts/popup.js"></script>
+</body>
+</html>
