@@ -31,6 +31,18 @@ class Weverse extends Content {
         return [640, 480];
     }
 
+    protected getExtraStyles(): string {
+        if (this.isMobile()) {
+            return '';
+        }
+        // Hide weverse own subtitles to prevent duplicates when displaying native subtitles.
+        return '.pzp-pc-subtitle-text,.pzp-pc__subtitle-text{display:none!important}';
+    }
+
+    protected isMobile(): boolean {
+        return window.location.hostname === 'm.weverse.io';
+    }
+
     protected addLabel(parent: HTMLElement, langs: string[]): void {
         const span = document.createElement('span');
         span.dataset.commasubs = '';
@@ -61,15 +73,21 @@ class Weverse extends Content {
     }
 
     protected onVideoFound(url: string): void {
+        console.debug('commasubs: found video.');
         const key = this.getMediaId(url);
         this.loadVideoManifest(key)
             .then(data => {
                 this.maybeShowTrack(data);
                 const lngs = this.smap.get(key) || [];
                 this.setBadge(lngs.length);
+                // Logged out.
+                querySelector<HTMLElement>('[class^=\'MobileLiveArtistProfileView_artist_wrap__\']:last-child', el => {
+                        this.addLabel(el, lngs);
+                    });
+                // Logged in.
                 querySelector<HTMLElement>('[class^=\'HeaderView_artist_wrap__\'] [class^=\'LiveArtistProfileView_info__\']:last-child', el => {
-                    this.addLabel(el, lngs);
-                });
+                        this.addLabel(el, lngs);
+                    });
             });
     }
 
@@ -77,7 +95,7 @@ class Weverse extends Content {
         let foundVideo = false, foundVideoList = false, foundLiveList = false;
 
         new MutationObserver((mutations, obs) => {
-            const u = new URL(window.location.href);
+            const u = window.location;
 
             if (this.page !== u.pathname) {
                 foundVideo = foundVideoList = foundLiveList = false;
@@ -91,12 +109,34 @@ class Weverse extends Content {
                 return;
             }
 
-            // if auto check disabled look only for page changes
-            if (!this.optAutoCheck) {
-                return;
-            }
-
             mutations.forEach(m => {
+                // When a video element is added to DOM start observing resizes.
+                // Even when auto check for subtitles is disabled still use our styles for cues
+                // since we can use our styling for their own subtitles.
+                m.addedNodes.forEach((node) => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        const n = <Element>node;
+                        // Check if added node is our video or if the video is a child of the added node.
+                        if (n.nodeName === 'VIDEO' && n.classList.contains('webplayer-internal-video')) {
+                            this.observeVideoResize(n, true);
+                            this.keepShowingTracks();
+                            foundVideo = false;
+                        } else {
+                            const vn = n.querySelector(this.videoSelector);
+                            if (vn) {
+                                this.observeVideoResize(n, true);
+                                this.keepShowingTracks();
+                                foundVideo = false;
+                            }
+                        }
+                    }
+                });
+
+                // If auto check is disabled don't continue.
+                if (!this.optAutoCheck) {
+                    return;
+                }
+
                 // page with a video
                 if (!foundVideo) {
                     querySelector<HTMLVideoElement>(this.videoSelector, el => {
@@ -141,6 +181,26 @@ class Weverse extends Content {
         };
         callback();
         new MutationObserver(() => callback()).observe(el, {childList: true});
+    }
+
+    private keepShowingTracks(): void {
+        // Mobile site is using native subtitles.
+        if (this.isMobile()) {
+            return;
+        }
+        // Listen to addtrack event so we can set mode to showing for every added track.
+        // This is needed because we hid weverse own subtitles.
+        // This will show the browser native subtitles.
+        const v = this.getVideoElement(this.videoSelector);
+        if (v) {
+            for (let textTrack of v.textTracks) {
+                textTrack.mode = 'showing';
+            }
+            v.textTracks.addEventListener('addtrack', ev => {
+                // @ts-ignore addtrack always have a track
+                ev.track.mode = 'showing';
+            })
+        }
     }
 }
 

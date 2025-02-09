@@ -31,6 +31,15 @@ class Youtube extends Content {
         return [640, 480];
     }
 
+    protected getExtraStyles(): string {
+        // Hide subtitles during ads.
+        return '#movie_player.ad-showing video::cue{visibility:hidden}';
+    }
+
+    protected isMobile(): boolean {
+        return window.location.hostname === 'm.youtube.com';
+    }
+
     protected async addLabel(langs: string[]): Promise<void> {
         const el = document.createElement('div');
         el.dataset.commasubs = '';
@@ -53,6 +62,7 @@ class Youtube extends Content {
     }
 
     protected onVideoFound(url: string): void {
+        console.debug('commasubs: found video.');
         const key = this.getMediaId(url);
         this.loadVideoManifest(key)
             .then(data => {
@@ -81,12 +91,31 @@ class Youtube extends Content {
                 return;
             }
 
-            // if auto check disabled look only for page changes
-            if (!this.optAutoCheck) {
-                return;
-            }
-
             mutations.forEach(m => {
+                // Check if video node was added which could mean it was recreated
+                // so we need to act like there was a new video added.
+                m.addedNodes.forEach((node) => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        const n = <Element>node;
+                        // Check if added node is our video or if the video is a child of the added node.
+                        if (n.nodeName === 'VIDEO' && n.classList.contains('html5-main-video')) {
+                            this.observeVideoResize(n, true);
+                            foundVideo = false;
+                        } else {
+                            const vn = n.querySelector(this.videoSelector);
+                            if (vn) {
+                                this.observeVideoResize(n, true);
+                                foundVideo = false;
+                            }
+                        }
+                    }
+                });
+
+                // If auto check is disabled don't continue.
+                if (!this.optAutoCheck) {
+                    return;
+                }
+
                 // page with a video
                 if (!foundVideo) {
                     querySelector<HTMLVideoElement>(this.videoSelector, el => {

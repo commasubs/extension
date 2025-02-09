@@ -15,7 +15,7 @@ and offers to display them. The subtitles are displayed using the HTML Track ele
 
 ```text
 node 20.18.1
-npm  10.8.2
+npm  11.1.0
 ```
 
 ## Installation
@@ -37,8 +37,8 @@ npm run build
 We are using Tailwind CSS framework so css files needs to be built.
 
 ```shell
-npx tailwindcss -i ./internal/options.css -o ./content/options.css
-npx tailwindcss -i ./internal/popup.css -o ./content/popup.css
+npx @tailwindcss/cli -i ./internal/options.css -o ./content/options.css
+npx @tailwindcss/cli -i ./internal/popup.css -o ./content/popup.css
 ```
 
 We need to support multiple browsers and each can have slightly different manifest file.
@@ -98,11 +98,12 @@ must not be distributed with the extension._
 
 ## Supported browsers
 
-| Name    | Engine | Min. Ver. |      Release | Reason |
-|:--------|:-------|----------:|-------------:|:-------|
-| Chrome  | Blink  |        88 | Jan 19, 2021 | MV3    |
-| Edge    | Blink  |        88 | Jan 21, 2021 | MV3    |
-| Firefox | Gecko  |       109 | Jan 17, 2023 | MV3    |
-| Opera   | Blink  |        74 |  Feb 2, 2021 | MV3    |
-| Safari  | WebKit |      15.4 | Mar 14, 2022 | MV3    |
+| Name                | Engine | Min. Ver. |      Release | Reason                                  |
+|:--------------------|:-------|----------:|-------------:|:----------------------------------------|
+| Chrome              | Blink  |        88 | Jan 19, 2021 | MV3                                     |
+| Edge                | Blink  |        88 | Jan 21, 2021 | MV3                                     |
+| Firefox             | Gecko  |       109 | Jan 17, 2023 | MV3                                     |
+| Firefox for Android | Gecko  |       113 | May 09, 2023 | browser_specific_settings.gecko_android |
+| Opera               | Blink  |        74 |  Feb 2, 2021 | MV3                                     |
+| Safari              | WebKit |      15.4 | Mar 14, 2022 | MV3                                     |
 

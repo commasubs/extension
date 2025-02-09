@@ -13,12 +13,18 @@ export abstract class Content {
     protected optAutoCheck: boolean = false;
     private readonly beforeUnloadListener: EventListener;
     private beforeUnloadActive = false;
+    private resizeTimeoutId = 0;
+    private trackSelector = 'track[data-commasubs]';
 
     protected abstract setTrack(track: Track): void;
 
     protected abstract getMediaId(url: string): string;
 
     protected abstract getVideoSize(): [number, number];
+
+    protected abstract getExtraStyles(): string;
+
+    protected abstract isMobile(): boolean;
 
     protected abstract observeContentChange(): void;
 
@@ -36,7 +42,6 @@ export abstract class Content {
             }
             this.observeContentChange();
         });
-
     }
 
     protected _getMediaId(service: string, key: string): string {
@@ -44,32 +49,52 @@ export abstract class Content {
     }
 
     protected _setTrack(v: HTMLVideoElement, track: Track): void {
-        v.crossOrigin = 'anonymous';
+        let t = document.querySelector<HTMLTrackElement>(this.trackSelector);
+        if (t && t.track.id === track.id) {
+            // Do not try to add the same track.
+            return;
+        }
+        if (t) {
+            t.remove();
+        }
 
         this.addCueStyles();
         const src = `${this.host}/t/${track.id}/${track.id}-${track.langcode}-${track.updated.toString(16)}.vtt`;
+        // const empty = URL.createObjectURL(new Blob(['WEBVTT'], {type: 'text/vtt'}));
 
-        let t = document.querySelector<HTMLTrackElement>('track[data-commasubs]');
-        if (!t) {
-            t = document.createElement('track');
-            t.dataset.commasubs = '';
-            t.default = true;
-            t.kind = 'subtitles';
-            t.label = track.langname;
-            t.srclang = track.langcode;
-            t.src = src;
-            v.appendChild(t);
-        } else {
-            t.label = track.langname;
-            t.srclang = track.langcode;
-            t.src = src;
-            t.track.mode = 'showing';
-        }
+        window
+            .fetch(src)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.blob();
+            })
+            .then((data) => {
+                t = document.createElement('track');
+                t.dataset.commasubs = '';
+                t.id = track.id;
+                t.default = true;
+                t.kind = 'subtitles';
+                t.label = track.langname;
+                t.srclang = track.langcode;
+                t.src = URL.createObjectURL(data);
+                v.replaceChildren(t);
+                window.setTimeout(() => {
+                    document.querySelectorAll<HTMLTrackElement>(this.trackSelector).forEach(el => {
+                        el.track.mode = 'showing';
+                    });
+                }, 1000);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
     }
 
     protected hideTrack(): void {
-        document.querySelectorAll<HTMLTrackElement>('track[data-commasubs]').forEach(el => {
-            el.track.mode = 'hidden';
+        document.querySelectorAll<HTMLTrackElement>(this.trackSelector).forEach(el => {
+            //el.track.mode = 'hidden';
+            el.remove();
         });
     }
 
@@ -156,6 +181,19 @@ export abstract class Content {
         }
     }
 
+    protected observeVideoResize(el: Element | null, runOnStart = false): void {
+        if (el === null) {
+            return;
+        }
+        if (runOnStart) {
+            this.addCueStyles();
+        }
+        new ResizeObserver((m) => {
+            window.clearTimeout(this.resizeTimeoutId);
+            this.resizeTimeoutId = window.setTimeout(() => this.addCueStyles(), 500);
+        }).observe(el);
+    }
+
     private findTrack(lang: string, tracks: Track[]): Track | undefined {
         const h = new Map<string, Track>();
         const m = new Map<string, Track>();
@@ -199,6 +237,7 @@ export abstract class Content {
     }
 
     private addCueStyles(): void {
+        console.debug('commasubs: add cue styles.');
         browser.storage.local.get(defOptions).then((value) => {
             const [w, h] = this.getVideoSize();
             this.setStyles(getStyles((value as Options).captions, w, h));
@@ -213,7 +252,7 @@ export abstract class Content {
             el.id = 'wv-cue-style';
             document.head.append(el);
         }
-        el.textContent = `::cue{${txt}}`;
+        el.textContent = `::cue{${txt}}` + this.getExtraStyles();
     }
 
     private listen(): void {

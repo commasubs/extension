@@ -1,14 +1,43 @@
-@config "../options.config.js";
+@import 'tailwindcss';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@plugin '@tailwindcss/forms';
 
-@layer components {
-    .form-label {
-        @apply block text-sm font-medium leading-6 text-gray-900;
-    }
-    .form-input {
-        @apply block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500 disabled:outline-gray-200;
-    }
+@theme {
+  --color-comma-50: #f5f8f8;
+  --color-comma-100: #dcebe9;
+  --color-comma-200: #b9d6d1;
+  --color-comma-300: #8fb9b4;
+  --color-comma-400: #679a95;
+  --color-comma-500: #4d7f7b;
+  --color-comma-600: #3e6866;
+  --color-comma-700: #335251;
+  --color-comma-800: #2c4343;
+  --color-comma-900: #283939;
+  --color-comma-950: #131f20;
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
+
+@utility form-label {
+  @apply block text-sm font-medium leading-6 text-gray-900;
+}
+
+@utility form-input {
+  @apply block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500 disabled:outline-gray-200;
 }
