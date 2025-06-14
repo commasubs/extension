@@ -39,6 +39,11 @@
     {
       "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*"],
       "js": ["content/scripts/youtube.js"]
+    },
+    {
+      "matches": ["https://berriz.in/*"],
+      "js": ["content/scripts/berriz.js"],
+      "css": ["content/scripts/berriz.css"]
     }
   ],
   "permissions": ["storage"],

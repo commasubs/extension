@@ -1,13 +1,13 @@
 import { encodeURI } from 'js-base64';
-import { LRUMap } from 'lru_map';
 import * as browser from './browser';
-import { Action, defOptions, getStyles, Manifest, Message, Options, TextMessage, Track, TrackMessage } from './exports';
+import {
+    Action, defOptions, getStyles, Manifest, Message, Options, Site, Sites, TextMessage, Track, TrackMessage
+} from './exports';
 
 export abstract class Content {
     // @ts-ignore
     protected host: string = build.CDN_URL;
     protected smap = new Map<string, string[]>();
-    protected mmap = new LRUMap<string, Manifest>(10);
     protected optLanguage: string = defOptions.language;
     protected optAutoShow: boolean = false;
     protected optAutoCheck: boolean = false;
@@ -20,7 +20,7 @@ export abstract class Content {
 
     protected abstract getMediaId(url: string): string;
 
-    protected abstract getVideoSize(): [number, number];
+    protected abstract getVideoSize(): Promise<[number, number]>;
 
     protected abstract getExtraStyles(): string;
 
@@ -30,18 +30,6 @@ export abstract class Content {
 
     protected constructor() {
         this.beforeUnloadListener = () => this.beforeUnload();
-        this.listen();
-        browser.storage.local.get(defOptions).then((value) => {
-            const opt = (value as Options);
-            this.optLanguage = opt.language;
-            this.optAutoShow = opt.autoShow == 'on';
-            this.optAutoCheck = opt.autoCheck == 'on';
-
-            if (!this.optAutoCheck) {
-                console.debug(`commasubs: autoCheck is disabled, not looking for subtitles.`);
-            }
-            this.observeContentChange();
-        });
     }
 
     protected _getMediaId(service: string, key: string): string {
@@ -91,6 +79,56 @@ export abstract class Content {
             });
     }
 
+    protected async _getVideoSize(selector: string): Promise<[number, number]> {
+        const v = this.getVideoElement(selector);
+        if (v) {
+            // @ts-ignore custom for iPhone
+            if (v.webkitDisplayingFullscreen && v.webkitPresentationMode === 'fullscreen') {
+                const s = window.screen;
+                if (s.orientation.type.startsWith('portrait')) {
+                    return [s.width * window.devicePixelRatio, s.height * window.devicePixelRatio];
+                }
+                return [s.height * window.devicePixelRatio, s.width * window.devicePixelRatio];
+            }
+            // @ts-ignore custom for iPad
+            if (v.webkitDisplayingFullscreen && v.webkitPresentationMode === 'picture-in-picture') {
+                try {
+                    const pip = await v.requestPictureInPicture();
+                    return [pip.width * window.devicePixelRatio, pip.height * window.devicePixelRatio];
+                } catch (e) {
+                }
+            }
+            return [v.clientWidth, v.clientHeight];
+        }
+        return [640, 480];
+    }
+
+    protected start(site: Site) {
+        console.debug(`commasubs: ${site} loaded.`);
+        this.listen();
+        browser.storage.local.get(defOptions).then((value) => {
+            const opt = (value as Options);
+            this.optLanguage = opt.language;
+            this.optAutoShow = opt.autoShow == 'on';
+
+            switch (site) {
+                case Sites.Berriz:
+                    this.optAutoCheck = opt.berriz.autoCheck == 'on';
+                    break;
+                case Sites.YouTube:
+                    this.optAutoCheck = opt.youtube.autoCheck == 'on';
+                    break;
+                case Sites.Weverse:
+                    this.optAutoCheck = opt.weverse.autoCheck == 'on';
+            }
+
+            if (!this.optAutoCheck) {
+                console.debug(`commasubs: autoCheck is disabled, not looking for subtitles.`);
+            }
+            this.observeContentChange();
+        });
+    }
+
     protected hideTrack(): void {
         document.querySelectorAll<HTMLTrackElement>(this.trackSelector).forEach(el => {
             //el.track.mode = 'hidden';
@@ -123,10 +161,6 @@ export abstract class Content {
     }
 
     protected async loadVideoManifest(key: string): Promise<Manifest> {
-        if (this.mmap.has(key)) {
-            return this.mmap.get(key) || <Manifest>{};
-        }
-
         const url = [this.host, 'm', key, 'manifest.json'].join('/');
 
         const response = await fetch(url);
@@ -148,7 +182,6 @@ export abstract class Content {
         }
 
         this.smap.set(key, lngs);
-        this.mmap.set(key, data);
 
         return data;
     }
@@ -188,6 +221,11 @@ export abstract class Content {
         if (runOnStart) {
             this.addCueStyles();
         }
+        // For iPhone fullscreen change. There is no resize event when going to/from fullscreen.
+        // For iPad picture-in-picture.
+        el.addEventListener("webkitpresentationmodechanged", (e) => {
+            this.addCueStyles();
+        });
         new ResizeObserver((m) => {
             window.clearTimeout(this.resizeTimeoutId);
             this.resizeTimeoutId = window.setTimeout(() => this.addCueStyles(), 500);
@@ -237,26 +275,28 @@ export abstract class Content {
     }
 
     private addCueStyles(): void {
-        console.debug('commasubs: add cue styles.');
         browser.storage.local.get(defOptions).then((value) => {
-            const [w, h] = this.getVideoSize();
-            this.setStyles(getStyles((value as Options).captions, w, h));
+            this.getVideoSize().then(([w, h]) => {
+                // console.debug(`commasubs: [w:${w}, h:${h}]`);
+                this.setStyles(getStyles((value as Options).captions, w, h));
+            });
         });
     }
 
     private setStyles(txt: string): void {
-        // console.log('setStyles', txt);
+        // console.debug('commasubs: set cue styles.');
         let el = document.querySelector<HTMLStyleElement>('#wv-cue-style');
         if (!el) {
             el = document.createElement('style');
             el.id = 'wv-cue-style';
             document.head.append(el);
         }
-        el.textContent = `::cue{${txt}}` + this.getExtraStyles();
+        el.textContent = txt + this.getExtraStyles();
     }
 
     private listen(): void {
-        browser.runtime.onMessage.addListener((msg, sender, sendResponse): true | Promise<unknown> | undefined => {
+        // @ts-ignore return true for async sendResponse
+        browser.runtime.onMessage.addListener((msg, sender, sendResponse): true | undefined => {
             switch ((msg as Message).action) {
                 case Action.GetManifest:
                     this.loadVideoManifest(this.getMediaId(window.location.href)).then(manifest => {
@@ -282,9 +322,6 @@ export abstract class Content {
                 }
                 if (changed['autoShow']) {
                     this.optAutoShow = changed['autoShow'].newValue == 'on';
-                }
-                if (changed['autoCheck']) {
-                    this.optAutoCheck = changed['autoCheck'].newValue == 'on';
                 }
             }
         });

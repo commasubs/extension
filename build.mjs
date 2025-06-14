@@ -6,7 +6,8 @@ await esbuild.build({
         'internal/popup.ts',
         'internal/options.ts',
         'internal/weverse.ts',
-        'internal/youtube.ts'
+        'internal/youtube.ts',
+        'internal/berriz.ts'
     ],
     outdir: 'content/scripts',
     bundle: true,

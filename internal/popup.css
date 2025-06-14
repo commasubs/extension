@@ -1,4 +1,5 @@
-@import 'tailwindcss';
+@import 'tailwindcss' source(none);
+@source "../content/popup.html";
 
 @theme {
   --color-comma-50: #f5f8f8;

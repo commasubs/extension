@@ -1,14 +1,14 @@
 import { Content } from './content';
-import { querySelector, Track } from './exports';
+import { querySelector, Sites, Track } from './exports';
 
 class Weverse extends Content {
-    private readonly name = 'weverse';
+    private readonly name = Sites.Weverse;
     private readonly videoSelector: string = 'video.webplayer-internal-video';
     private page = '';
 
     constructor() {
         super();
-        console.debug(`commasubs: ${this.name} loaded.`);
+        this.start(this.name);
     }
 
     protected getMediaId(url: string): string {
@@ -23,12 +23,8 @@ class Weverse extends Content {
         }
     }
 
-    protected getVideoSize(): [number, number] {
-        const v = this.getVideoElement(this.videoSelector);
-        if (v) {
-            return [v.clientWidth, v.clientHeight];
-        }
-        return [640, 480];
+    protected async getVideoSize(): Promise<[number, number]> {
+        return this._getVideoSize(this.videoSelector);
     }
 
     protected getExtraStyles(): string {
@@ -124,7 +120,7 @@ class Weverse extends Content {
                         } else {
                             const vn = n.querySelector(this.videoSelector);
                             if (vn) {
-                                this.observeVideoResize(n, true);
+                                this.observeVideoResize(vn, true);
                                 this.keepShowingTracks();
                                 foundVideo = false;
                             }

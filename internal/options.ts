@@ -1,5 +1,5 @@
 import * as browser from './browser';
-import { defCaptions, defOptions, getStyles, Options, querySelector } from './exports';
+import { defCaptions, defOptions, defSiteOptions, getStyles, Options, querySelector } from './exports';
 
 class ExtensionOptions {
     constructor() {
@@ -26,26 +26,29 @@ class ExtensionOptions {
                 this.setValue('language', opt.language);
             }
             if (opt.autoShow) {
-                this.setValue('autoShow', opt.autoShow);
+                this.setChecked('autoShow', opt.autoShow);
             }
-            if (opt.autoCheck) {
-                this.setValue('autoCheck', opt.autoCheck);
+            if (opt.berriz.autoCheck) {
+                this.setChecked('berrizAutoCheck', opt.berriz.autoCheck);
+            }
+            if (opt.youtube.autoCheck) {
+                this.setChecked('youtubeAutoCheck', opt.youtube.autoCheck);
+            }
+            if (opt.weverse.autoCheck) {
+                this.setChecked('weverseAutoCheck', opt.weverse.autoCheck);
             }
             this.redrawCaption();
         });
     }
 
     private redrawCaption(): void {
-        querySelector<HTMLElement>('#cue', el => {
-            el.setAttribute('style', getStyles(this.getOptions().captions, 640, 480));
-        });
+        this.setStyles(getStyles(this.getOptions().captions, 640, 480).replace('video::cue', '#cue'));
     }
 
     private getOptions(): Options {
         let opt: Options = {
             language: defOptions.language,
             autoShow: defOptions.autoShow,
-            autoCheck: defOptions.autoCheck,
             captions: {
                 fontFamily: defCaptions.fontFamily,
                 fontSize: defCaptions.fontSize,
@@ -54,6 +57,15 @@ class ExtensionOptions {
                 bgColor: defCaptions.bgColor,
                 bgOpacity: defCaptions.bgOpacity,
             },
+            berriz: {
+                autoCheck: defSiteOptions.autoCheck,
+            },
+            youtube: {
+                autoCheck: defSiteOptions.autoCheck,
+            },
+            weverse: {
+                autoCheck: defSiteOptions.autoCheck,
+            }
         };
 
         document.querySelectorAll<HTMLSelectElement>('select').forEach((el) => {
@@ -63,9 +75,6 @@ class ExtensionOptions {
                     break;
                 case 'autoShow':
                     opt.autoShow = el.value;
-                    break;
-                case 'autoCheck':
-                    opt.autoCheck = el.value;
                     break;
                 case 'fontFamily':
                     opt.captions.fontFamily = el.value;
@@ -88,6 +97,24 @@ class ExtensionOptions {
             }
         });
 
+        document.querySelectorAll<HTMLInputElement>('input[type=checkbox]').forEach((el) => {
+            console.log(el.id, el.checked, el.value);
+            switch (el.id) {
+                case 'autoShow':
+                    opt.autoShow = el.checked ? 'on' : 'off';
+                    break;
+                case 'berrizAutoCheck':
+                    opt.berriz.autoCheck = el.checked ? 'on' : 'off';
+                    break;
+                case 'youtubeAutoCheck':
+                    opt.youtube.autoCheck = el.checked ? 'on' : 'off';
+                    break;
+                case 'weverseAutoCheck':
+                    opt.weverse.autoCheck = el.checked ? 'on' : 'off';
+                    break;
+            }
+        });
+
         return opt;
     }
 
@@ -101,6 +128,22 @@ class ExtensionOptions {
         querySelector<HTMLSelectElement>('#' + id, el => {
             el.value = value;
         });
+    }
+
+    private setChecked(id: string, value: string): void {
+        querySelector<HTMLInputElement>('#' + id, el => {
+            el.checked = value == 'on';
+        });
+    }
+
+    private setStyles(txt: string): void {
+        let el = document.querySelector<HTMLStyleElement>('#wv-cue-style');
+        if (!el) {
+            el = document.createElement('style');
+            el.id = 'wv-cue-style';
+            document.head.append(el);
+        }
+        el.textContent = txt;
     }
 
     private listen(): void {

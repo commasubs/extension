@@ -1,3 +1,11 @@
+export const Sites = {
+    Berriz: 'berriz',
+    YouTube: 'youtube',
+    Weverse: 'weverse',
+} as const;
+
+export type Site = typeof Sites[keyof typeof Sites];
+
 export type Track = {
     id: string,
     langcode: string,
@@ -33,12 +41,9 @@ export type TrackMessage = Message & {
     track: Track,
 }
 
-export type Options = {
-    language: string;  // preferred language
-    autoShow: string;  // automatically show subtitles when found in preferred language
+export type SiteOptions = {
     autoCheck: string; // automatically check for subtitles on every video
-    captions: Caption; // options to change cue styles
-};
+}
 
 export type Caption = {
     fontFamily: string;
@@ -47,6 +52,15 @@ export type Caption = {
     textOpacity: string;
     bgColor: string;
     bgOpacity: string;
+};
+
+export type Options = {
+    language: string;  // preferred language
+    autoShow: string;  // automatically show subtitles when found in preferred language
+    captions: Caption; // options to change cue styles
+    berriz: SiteOptions;
+    youtube: SiteOptions;
+    weverse: SiteOptions;
 };
 
 export const defCaptions: Caption = {
@@ -58,11 +72,17 @@ export const defCaptions: Caption = {
     bgOpacity: 'bf',
 };
 
+export const defSiteOptions: SiteOptions = {
+    autoCheck: 'off',
+}
+
 export const defOptions: Options = {
     language: 'en',
     autoShow: 'off',
-    autoCheck: 'off',
     captions: defCaptions,
+    berriz: defSiteOptions,
+    youtube: defSiteOptions,
+    weverse: defSiteOptions,
 };
 
 export const fontFamilyMap = new Map([
@@ -97,14 +117,22 @@ export const colorsMap = new Map([
 ]);
 
 export function getStyles(cap: Caption, w: number, h: number): string {
-    let styles: string[] = [
+    const out: string[] = [];
+    const styles: string[] = [
         'font-family:' + fontFamilyMap.get(cap.fontFamily),
-        'color: ' + colorsMap.get(cap.textColor) + cap.textOpacity,
-        'background: ' + colorsMap.get(cap.bgColor) + cap.bgOpacity,
+        'color:' + colorsMap.get(cap.textColor) + cap.textOpacity,
     ];
 
+    if (CSS.supports('selector(::-webkit-media-text-track-display-backdrop)')) {
+        out.push(
+            'video::-webkit-media-text-track-display-backdrop{background-color:'+colorsMap.get(cap.bgColor) + cap.bgOpacity+'}',
+        );
+    } else {
+        styles.push('background:' + colorsMap.get(cap.bgColor) + cap.bgOpacity);
+    }
+
     if (cap.fontFamily == 'capitals') {
-        styles.push('font-variant: small-caps');
+        styles.push('font-variant:small-caps');
     }
 
     const mpl = fontSizeMap.get(cap.fontSize) || 1;
@@ -117,9 +145,10 @@ export function getStyles(cap: Caption, w: number, h: number): string {
         s = w / nw * 16;
     }
 
-    styles.push('font-size: ' + (s * mpl) + 'px');
+    styles.push('font-size:' + (s * mpl) + 'px');
+    out.push('video::cue{' + styles.join('; ') + '}')
 
-    return styles.join('; ');
+    return out.join("\n");
 }
 
 export function querySelector<T extends Element>(selector: string, fn: (el: T) => void): void {

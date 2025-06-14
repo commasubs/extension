@@ -14,7 +14,7 @@ and offers to display them. The subtitles are displayed using the HTML Track ele
 ## Environment
 
 ```text
-node 20.18.1
+node 20.19.2
 npm  11.1.0
 ```
 
@@ -84,7 +84,7 @@ must not be distributed with the extension._
 > Every time you start watching a video on one of our supported websites this extension will check
 > if anyone uploaded subtitles for that video so you can watch them.
 >
-> Currently supported sites are YouTube and Weverse.
+> Currently supported sites are Berriz, YouTube and Weverse.
 >
 > NOTE: Automatic checking for subtitles is disabled by default. You have to click on the extension
 > every time you want to know if there are subtitles available for a video. You can enable automatic

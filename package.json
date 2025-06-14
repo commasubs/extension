@@ -9,7 +9,7 @@
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "20.18.1",
+      "version": "20.19.2",
       "onFail": "warn"
     },
     "packageManager": {
@@ -20,14 +20,15 @@
   },
   "private": true,
   "devDependencies": {
-    "@tailwindcss/cli": "^4.0.4",
+    "@tailwindcss/cli": "^4.1.10",
     "@tailwindcss/forms": "^0.5.10",
-    "@types/webextension-polyfill": "^0.12.1",
-    "esbuild": "^0.25.0",
+    "@types/webextension-polyfill": "^0.12.3",
+    "esbuild": "^0.25.5",
+    "hls.js": "^1.6.5",
     "js-base64": "^3.7.7",
-    "lru_map": "^0.4.1",
-    "tailwindcss": "^4.0.4",
-    "typescript": "^5.7.3",
-    "web-ext": "^8.4.0"
+    "notyf": "^3.10.0",
+    "tailwindcss": "^4.1.10",
+    "typescript": "^5.8.3",
+    "web-ext": "^8.7.1"
   }
 }

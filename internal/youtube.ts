@@ -1,14 +1,14 @@
 import { Content } from './content';
-import { querySelector, Track } from './exports';
+import { querySelector, Sites, Track } from './exports';
 
 class Youtube extends Content {
-    private readonly name: string = 'youtube';
+    private readonly name = Sites.YouTube;
     private readonly videoSelector: string = 'video.html5-main-video';
     private page = '';
 
     constructor() {
         super();
-        console.debug(`commasubs: ${this.name} loaded.`);
+        this.start(this.name);
     }
 
     protected getMediaId(url: string): string {
@@ -23,12 +23,8 @@ class Youtube extends Content {
         }
     }
 
-    protected getVideoSize(): [number, number] {
-        const v = this.getVideoElement(this.videoSelector);
-        if (v) {
-            return [v.clientWidth, v.clientHeight];
-        }
-        return [640, 480];
+    protected async getVideoSize(): Promise<[number, number]> {
+        return this._getVideoSize(this.videoSelector);
     }
 
     protected getExtraStyles(): string {
@@ -104,7 +100,7 @@ class Youtube extends Content {
                         } else {
                             const vn = n.querySelector(this.videoSelector);
                             if (vn) {
-                                this.observeVideoResize(n, true);
+                                this.observeVideoResize(vn, true);
                                 foundVideo = false;
                             }
                         }
